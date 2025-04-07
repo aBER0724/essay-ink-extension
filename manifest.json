@@ -27,7 +27,7 @@
       "matches": ["<all_urls>"],
       "js": [
         "js/storage.js",
-        "js/content/content.js"
+        "js/content.js"
       ],
       "run_at": "document_end"
     }

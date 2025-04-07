@@ -16,6 +16,12 @@ function initialize() {
       // 把最新选中的文本发送到后台脚本保存
       if (currentSelectedText) {
         try {
+          // 检查扩展是否可用
+          if (!chrome.runtime?.id) {
+            console.log('扩展上下文已失效');
+            return;
+          }
+          
           chrome.runtime.sendMessage({
             type: 'saveSelectedText',
             data: currentSelectedText
@@ -37,6 +43,12 @@ function initialize() {
   // 监听来自popup的消息
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     try {
+      // 检查扩展是否可用
+      if (!chrome.runtime?.id) {
+        console.log('扩展上下文已失效');
+        return;
+      }
+      
       if (request.type === 'getSelectedText') {
         // 返回当前选中的文本
         sendResponse({

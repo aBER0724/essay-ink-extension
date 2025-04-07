@@ -139,8 +139,11 @@ class QuickNoteManager {
   updateEditorWithSelectedText() {
     // 如果有选中文本，且输入框为空或只有草稿，自动添加到编辑框
     if (this.currentSelectedText && this.elements.quickNote) {
+      const currentValue = this.elements.quickNote.value.trim();
+      const placeholder = this.elements.quickNote.placeholder;
+      
       // 如果编辑框为空或只包含默认文本，则替换内容
-      if (!this.elements.quickNote.value.trim()) {
+      if (!currentValue || currentValue === placeholder) {
         // 添加选中的文本和来源信息
         const content = `${this.currentSelectedText}\n\n---\n> 来源: [${this.currentTitle}](${this.currentUrl})`;
         this.elements.quickNote.value = content;
