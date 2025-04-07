@@ -55,6 +55,8 @@ class PopupController {
     const tempContent = await ReadCraftStorage.getTempContent();
     if (tempContent) {
       this.showExtractedContent(tempContent);
+      // 清空临时存储
+      await ReadCraftStorage.setTempContent('');
     }
     
     // 绑定事件
@@ -79,8 +81,39 @@ class PopupController {
     if (this.elements.sendQuickNote) {
       this.elements.sendQuickNote.addEventListener('click', () => this.sendQuickNote());
     }
+    
+    // 监听页面关闭事件
+    window.addEventListener('unload', () => this.handlePopupClose());
   }
 
+  /**
+   * 处理弹出窗口关闭事件
+   */
+  handlePopupClose() {
+    // 清空文本区域
+    if (this.elements.quickNote) {
+      this.elements.quickNote.value = '';
+    }
+    
+    // 清除选中的文本
+    chrome.storage.local.remove('lastSelectedText', () => {
+      console.log('清除最近选中的文本');
+    });
+    
+    // 清除草稿
+    chrome.storage.local.remove('noteDraft', () => {
+      console.log('清除草稿内容');
+    });
+    
+    // 通知后台脚本清空最近选中的文本
+    try {
+      chrome.runtime.sendMessage({
+        type: 'clearLastSelectedText'
+      });
+    } catch (error) {
+      console.error('通知后台脚本清除选中文本时出错:', error);
+    }
+  }
 
   /**
    * 发送快速笔记
@@ -90,12 +123,12 @@ class PopupController {
       const content = this.elements.quickNote.value.trim();
       
       if (!content) {
-        this.showStatus(this.elements.quickNoteStatus, '笔记内容不能为空', 'error');
+        this.showStatus('笔记内容不能为空', 'error');
         return;
       }
       
       this.setLoading(true);
-      this.showStatus(this.elements.quickNoteStatus, '正在发送...', 'info');
+      this.showStatus('正在发送...', 'info');
       
       // 获取标签
       const tag = this.elements.quickNoteTag.value.trim();
@@ -108,13 +141,13 @@ class PopupController {
       );
       
       // 显示成功状态
-      this.showStatus(this.elements.quickNoteStatus, '笔记保存成功', 'success');
+      this.showStatus('笔记保存成功', 'success');
       
       // 清空输入框
       this.elements.quickNote.value = '';
     } catch (error) {
       console.error('发送快速笔记出错:', error);
-      this.showStatus(this.elements.quickNoteStatus, '发送失败: ' + error.message, 'error');
+      this.showStatus('发送失败: ' + error.message, 'error');
     } finally {
       this.setLoading(false);
     }
@@ -143,25 +176,35 @@ class PopupController {
 
   /**
    * 显示状态消息
-   * @param {Element} element - 状态元素
    * @param {string} message - 消息内容
    * @param {string} type - 消息类型: success | error | info
    */
-  showStatus(element, message, type = 'info') {
-    if (!element) return;
+  showStatus(message, type = 'info') {
+    const statusElement = document.getElementById('globalStatus');
+    if (!statusElement) return;
     
     // 设置状态文本
-    element.textContent = message;
+    statusElement.textContent = message;
     
     // 设置状态类型
-    element.className = 'status';
-    element.classList.add(type);
+    statusElement.className = 'status';
+    statusElement.classList.add(type);
     
     // 几秒后隐藏（除非是错误消息）
     if (type !== 'error') {
       setTimeout(() => {
-        element.className = 'status';
+        statusElement.classList.remove(type);
       }, 3000);
+    }
+  }
+
+  /**
+   * 显示提取的内容
+   * @param {string} content - 提取的内容
+   */
+  showExtractedContent(content) {
+    if (this.elements.quickNote) {
+      this.elements.quickNote.value = content;
     }
   }
 }

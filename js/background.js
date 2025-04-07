@@ -76,16 +76,53 @@ function handleMessage(message, sender, sendResponse) {
     if (message.type === 'saveSelectedText' && message.data) {
       lastSelectedText = message.data;
       console.log('保存选中文本:', lastSelectedText);
+      
+      // 持久化存储选中的文本
+      chrome.storage.local.set({ lastSelectedText: lastSelectedText }, () => {
+        if (chrome.runtime.lastError) {
+          console.error('保存选中文本到存储时出错:', chrome.runtime.lastError);
+        }
+      });
+      
       sendResponse({ success: true });
     }
     
     // 获取最近选中的文本
     if (message.type === 'getLastSelectedText') {
-      console.log('返回选中文本:', lastSelectedText);
-      sendResponse({ 
-        success: true, 
-        data: lastSelectedText 
+      // 尝试从存储中获取选中的文本
+      chrome.storage.local.get(['lastSelectedText'], (result) => {
+        if (result.lastSelectedText) {
+          lastSelectedText = result.lastSelectedText;
+        }
+        console.log('返回选中文本:', lastSelectedText);
+        sendResponse({ 
+          success: true, 
+          data: lastSelectedText 
+        });
       });
+      return true;
+    }
+    
+    // 清除最近选中的文本
+    if (message.type === 'clearLastSelectedText') {
+      lastSelectedText = '';
+      console.log('清除选中文本');
+      
+      // 从存储中移除
+      chrome.storage.local.remove('lastSelectedText', () => {
+        if (chrome.runtime.lastError) {
+          console.error('从存储中移除选中文本时出错:', chrome.runtime.lastError);
+        }
+      });
+      
+      sendResponse({ success: true });
+      return true;
+    }
+    
+    // 打开 popup
+    if (message.type === 'openPopup') {
+      chrome.action.openPopup();
+      sendResponse({ success: true });
       return true;
     }
     

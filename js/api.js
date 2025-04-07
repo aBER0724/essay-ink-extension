@@ -103,8 +103,11 @@ class ReadCraftAPI {
   async saveQuickNote(content, folderId, includeUrl = true, contentType = 'essay') {
     let finalContent = content;
     
+    // 获取设置
+    const settings = await ReadCraftStorage.getSettings();
+    
     // 如果需要包含URL，添加来源链接
-    if (includeUrl) {
+    if (includeUrl && settings.includeUrl !== false) {
       const tabs = await new Promise(resolve => {
         chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
           resolve(tabs);

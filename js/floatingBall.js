@@ -11,6 +11,7 @@ class FloatingBall {
     this.isVisible = false;
     this.isLoading = false;
     this.currentSelectedText = '';
+    this.settings = null;
     
     // 状态
     this.state = {
@@ -22,14 +23,43 @@ class FloatingBall {
    * 初始化悬浮球
    */
   async init() {
-    const settings = await ReadCraftStorage.getSettings();
-    if (!settings.showFloatingBall) {
-      return;
+    try {
+      // 加载设置
+      this.settings = await ReadCraftStorage.getSettings();
+      console.log('悬浮球设置:', this.settings);
+      
+      // 如果设置中禁用了悬浮球，则不创建
+      if (this.settings.showFloatingBall === false) {
+        console.log('悬浮球已禁用');
+        return;
+      }
+      
+      // 创建悬浮球
+      this.create();
+      
+      // 设置选择文本监听器
+      this.setupSelectionListener();
+      
+      // 绑定事件
+      this.bindEvents();
+      
+      // 监听来自popup的消息
+      chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        console.log('收到消息:', request);
+        if (request.type === 'updateFloatingBall') {
+          if (request.data.show) {
+            this.show();
+          } else {
+            this.hide();
+          }
+        }
+      });
+      
+      // 初始显示状态
+      this.show();
+    } catch (error) {
+      console.error('初始化悬浮球失败:', error);
     }
-    
-    this.create();
-    this.bindEvents();
-    this.setupSelectionListener();
   }
 
   /**
@@ -50,7 +80,7 @@ class FloatingBall {
     const style = document.createElement('style');
     style.textContent = `
       .essay-ink-floating-ball {
-        position: absolute;
+        position: fixed;
         padding: 5px 10px;
         background-color: #4caf50;
         color: white;
@@ -125,34 +155,20 @@ class FloatingBall {
       
       if (this.isLoading || !this.currentSelectedText) return;
       
-      // 设置加载状态
-      this.setLoading(true);
-      
       try {
-        // 准备数据
-        const pageUrl = window.location.href;
-        const pageTitle = document.title || '当前页面';
+        // 保存选中的文本到临时存储
+        await ReadCraftStorage.setTempContent(this.currentSelectedText);
         
-        // 发送请求
-        const response = await this.sendToEssayInk(this.currentSelectedText, pageUrl, pageTitle);
+        // 打开 popup
+        chrome.runtime.sendMessage({
+          type: 'openPopup'
+        });
         
-        // 显示成功状态
-        this.ball.innerHTML = '添加成功！';
-        this.ball.style.backgroundColor = '#4caf50';
+        // 隐藏悬浮球
+        this.hide();
       } catch (error) {
-        console.error('Essay.ink: 发送请求失败', error);
-        this.ball.innerHTML = '添加失败';
-        this.ball.style.backgroundColor = '#f44336';
+        console.error('打开 popup 失败:', error);
       }
-      
-      // 延时隐藏
-      setTimeout(() => {
-        this.ball.style.display = 'none';
-        this.ball.innerHTML = '添加到 Essay';
-        this.ball.style.backgroundColor = '#4caf50';
-        this.setLoading(false);
-        this.currentSelectedText = ''; // 清空保存的文本
-      }, 3000);
     });
   }
 
@@ -170,9 +186,10 @@ class FloatingBall {
       throw new Error('Essay.ink API Token 未设置，请在扩展设置中配置');
     }
     
-    // 准备内容，添加来源信息
+    // 准备内容
     let content = text;
     
+    // 根据设置决定是否添加来源信息
     if (settings.includeUrl !== false) {
       content += `\n\n---\n> 来源: [${title}](${url})`;
     }
@@ -213,6 +230,26 @@ class FloatingBall {
     
     if (isLoading) {
       this.ball.innerHTML = '发送中...';
+    }
+  }
+
+  /**
+   * 显示悬浮球
+   */
+  show() {
+    if (this.ball) {
+      this.ball.style.display = 'block';
+      this.isVisible = true;
+    }
+  }
+
+  /**
+   * 隐藏悬浮球
+   */
+  hide() {
+    if (this.ball) {
+      this.ball.style.display = 'none';
+      this.isVisible = false;
     }
   }
 }

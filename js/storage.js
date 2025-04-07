@@ -32,17 +32,8 @@ async function saveSettings(settings) {
 // 获取临时存储的内容
 async function getTempContent() {
   return new Promise((resolve) => {
-    chrome.storage.local.get('tempContent', (result) => {
-      resolve(result.tempContent || null);
-    });
-  });
-}
-
-// 保存临时内容
-async function saveTempContent(content) {
-  return new Promise((resolve) => {
-    chrome.storage.local.set({ tempContent: content }, () => {
-      resolve();
+    chrome.storage.local.get(['tempContent'], (result) => {
+      resolve(result.tempContent || '');
     });
   });
 }
@@ -89,12 +80,24 @@ async function clearNoteDraft() {
   });
 }
 
+// 临时存储选中的文本
+async function setTempContent(content) {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ tempContent: content }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('保存临时内容失败:', chrome.runtime.lastError);
+      }
+      resolve();
+    });
+  });
+}
+
 // 导出函数
 window.ReadCraftStorage = {
   getSettings,
   saveSettings,
+  setTempContent,
   getTempContent,
-  saveTempContent,
   clearTempContent,
   saveNoteDraft,
   getNoteDraft,

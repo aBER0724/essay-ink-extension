@@ -18,7 +18,8 @@
     
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      width: 360px;
+      width: 600px;
+      height: 600px;
       margin: 0;
       padding: 0;
       background-color: var(--background-color);
@@ -101,7 +102,8 @@
     
     textarea {
       resize: vertical;
-      min-height: 80px;
+      
+      min-height: 200px;
     }
     
     .status {
@@ -112,16 +114,47 @@
       display: none;
     }
     
+    #globalStatus {
+      margin-bottom: 15px;
+      text-align: center;
+      font-weight: 500;
+      min-height: 20px;
+      visibility: hidden;
+      opacity: 0;
+      transition: visibility 0.2s, opacity 0.2s;
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 80%;
+      padding: 10px;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    
     .error {
       background-color: #ffebee;
       color: var(--error-color);
       display: block;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
     
     .success {
       background-color: #e8f5e9;
       color: var(--success-color);
       display: block;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    .info {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      display: block;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
     
     .loading {
@@ -225,6 +258,9 @@
   <div class="container">
     <div class="title">Essay.ink 划词助手</div>
     
+    <!-- 全局状态通知区域 -->
+    <div id="globalStatus" class="status"></div>
+    
     <div class="tabs">
       <div class="tab active" data-tab="quick">添加笔记</div>
       <div class="tab" data-tab="settings">设置</div>
@@ -296,6 +332,10 @@
         <div class="input-group checkbox-group">
           <input type="checkbox" id="includeUrl" checked>
           <label for="includeUrl">添加内容来源链接</label>
+        </div>
+        <div class="input-group checkbox-group">
+          <input type="checkbox" id="showFloatingBall" checked>
+          <label for="showFloatingBall">显示悬浮球</label>
         </div>
         <button id="savePreferences" class="button">保存偏好</button>
       </div>

@@ -15,6 +15,7 @@ class SettingsManager {
       
       // 偏好设置元素
       includeUrl: document.getElementById('includeUrl'),
+      showFloatingBall: document.getElementById('showFloatingBall'),
       savePreferencesBtn: document.getElementById('savePreferences'),
       
       // 标签页导航
@@ -60,6 +61,10 @@ class SettingsManager {
     
     if (this.elements.includeUrl) {
       this.elements.includeUrl.checked = this.settings.includeUrl !== false;
+    }
+    
+    if (this.elements.showFloatingBall) {
+      this.elements.showFloatingBall.checked = this.settings.showFloatingBall !== false;
     }
   }
 
@@ -111,6 +116,36 @@ class SettingsManager {
   }
 
   /**
+   * 显示状态消息
+   * @param {string} message - 消息内容
+   * @param {string} type - 消息类型: success | error | info
+   */
+  showStatus(message, type = 'info') {
+    const statusElement = document.getElementById('globalStatus');
+    if (!statusElement) return;
+    
+    // 先移除可能的状态类
+    statusElement.classList.remove('success', 'error', 'info');
+    
+    // 设置状态文本
+    statusElement.textContent = message;
+    
+    // 添加状态类型
+    statusElement.classList.add(type);
+    
+    // 几秒后隐藏（除非是错误消息）
+    if (type !== 'error') {
+      setTimeout(() => {
+        statusElement.classList.remove(type);
+      }, 3000);
+    }
+  }
+
+  setLoading(isLoading) {
+    // Implementation of setLoading method
+  }
+
+  /**
    * 保存API设置
    */
   async saveAPISettings() {
@@ -120,7 +155,7 @@ class SettingsManager {
       
       // 验证输入
       if (!apiKey) {
-        this.showStatus(this.elements.settingsStatus, '请输入 Essay.ink API Token', 'error');
+        this.showStatus('请输入 Essay.ink API Token', 'error');
         return;
       }
       
@@ -131,10 +166,10 @@ class SettingsManager {
       await ReadCraftStorage.saveSettings(this.settings);
       
       // 显示成功消息
-      this.showStatus(this.elements.settingsStatus, 'API Token 已保存', 'success');
+      this.showStatus('API Token 已保存', 'success');
     } catch (error) {
       console.error('保存API设置出错:', error);
-      this.showStatus(this.elements.settingsStatus, '保存设置出错: ' + error.message, 'error');
+      this.showStatus('保存设置出错: ' + error.message, 'error');
     }
   }
 
@@ -143,43 +178,39 @@ class SettingsManager {
    */
   async savePreferences() {
     try {
-      // 获取表单值
-      const includeUrl = this.elements.includeUrl.checked;
+      this.setLoading(true);
+      this.showStatus('正在保存设置...', 'info');
+      
+      // 获取当前设置
+      const settings = await ReadCraftStorage.getSettings();
+      console.log('当前设置:', settings);
       
       // 更新设置
-      this.settings.includeUrl = includeUrl;
+      settings.includeUrl = this.elements.includeUrl.checked;
+      settings.showFloatingBall = this.elements.showFloatingBall.checked;
+      console.log('更新后的设置:', settings);
       
       // 保存设置
-      await ReadCraftStorage.saveSettings(this.settings);
+      await ReadCraftStorage.saveSettings(settings);
       
-      // 显示成功消息
-      this.showStatus(this.elements.settingsStatus, '偏好设置已保存', 'success');
+      // 通知内容脚本更新悬浮球状态
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'updateFloatingBall',
+          data: {
+            show: settings.showFloatingBall
+          }
+        });
+      }
+      
+      this.showStatus('设置已保存', 'success');
     } catch (error) {
-      console.error('保存偏好设置出错:', error);
-      this.showStatus(this.elements.settingsStatus, '保存偏好设置出错: ' + error.message, 'error');
+      console.error('保存偏好设置失败:', error);
+      this.showStatus('保存失败: ' + error.message, 'error');
+    } finally {
+      this.setLoading(false);
     }
-  }
-
-  /**
-   * 显示状态消息
-   * @param {Element} element - 状态元素
-   * @param {string} message - 消息内容
-   * @param {string} type - 消息类型: success | error
-   */
-  showStatus(element, message, type = 'info') {
-    if (!element) return;
-    
-    // 设置状态文本
-    element.textContent = message;
-    
-    // 设置状态类型
-    element.className = 'status';
-    element.classList.add(type);
-    
-    // 几秒后隐藏
-    setTimeout(() => {
-      element.className = 'status';
-    }, 3000);
   }
 }
 

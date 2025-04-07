@@ -41,8 +41,11 @@ class QuickNoteManager {
       // 尝试从后台脚本获取最近选中的文本
       await this.getLastSelectedText();
       
-      // 加载草稿
-      await this.loadDraft();
+      // 不再自动加载草稿，确保启动时不会加载上次未发送的内容
+      // await this.loadDraft();
+      
+      // 清除之前可能存在的草稿
+      await this.clearDraft();
       
       // 如果选择了note类型，尝试加载文件夹
       if (this.elements.typeNote && this.elements.typeNote.checked) {
@@ -53,9 +56,9 @@ class QuickNoteManager {
       this.bindEvents();
     } catch (error) {
       console.error('初始化笔记管理器时出错:', error);
-      // 即使出错，也尝试绑定事件和加载草稿
+      // 即使出错，也尝试绑定事件和清除草稿
       this.bindEvents();
-      this.loadDraft().catch(e => console.error('加载草稿失败:', e));
+      this.clearDraft().catch(e => console.error('清除草稿失败:', e));
     }
   }
 
@@ -65,7 +68,7 @@ class QuickNoteManager {
   async getCurrentTab() {
     return new Promise((resolve) => {
       try {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
           if (chrome.runtime.lastError) {
             console.error('获取标签页时出错:', chrome.runtime.lastError);
             resolve();
@@ -82,7 +85,8 @@ class QuickNoteManager {
                 // 处理不存在响应的情况
                 if (chrome.runtime.lastError) {
                   console.log('获取选中文本错误:', chrome.runtime.lastError);
-                  resolve();
+                  // 尝试从后台脚本获取最近选中的文本
+                  this.getLastSelectedText().then(resolve);
                   return;
                 }
                 
@@ -94,6 +98,8 @@ class QuickNoteManager {
               });
             } catch (error) {
               console.error('发送选中文本消息时出错:', error);
+              // 尝试从后台脚本获取最近选中的文本
+              await this.getLastSelectedText();
               resolve();
             }
           } else {
@@ -144,12 +150,18 @@ class QuickNoteManager {
       
       // 如果编辑框为空或只包含默认文本，则替换内容
       if (!currentValue || currentValue === placeholder) {
-        // 添加选中的文本和来源信息
-        const content = `${this.currentSelectedText}\n> 来源: [${this.currentTitle}](${this.currentUrl})`;
+        // 添加选中的文本
+        let content = this.currentSelectedText;
+        
+        // 根据设置决定是否添加来源信息
+        if (this.settings && this.settings.includeUrl !== false) {
+          content += `\n> 来源: [${this.currentTitle}](${this.currentUrl})`;
+        }
+        
         this.elements.quickNote.value = content;
         
-        // 保存为草稿
-        this.saveDraft();
+        // 显示内容后不自动保存为草稿，这样关闭时会真正清空
+        // this.saveDraft();
       }
     }
   }
@@ -163,12 +175,15 @@ class QuickNoteManager {
       this.elements.sendQuickNote.addEventListener('click', () => this.sendNote());
     }
     
+    // 移除自动保存草稿功能，确保textarea内容不会被持久化
+    /*
     // 自动保存草稿
     if (this.elements.quickNote) {
       this.elements.quickNote.addEventListener('input', () => {
         this.saveDraft();
       });
     }
+    */
     
     // 保存内容类型偏好到设置
     if (this.elements.typeEssay && this.elements.typeNote) {
@@ -184,6 +199,36 @@ class QuickNoteManager {
           this.loadFolders();
         }
       });
+    }
+    
+    // 监听页面关闭事件
+    window.addEventListener('unload', () => this.handlePopupClose());
+  }
+
+  /**
+   * 处理弹出窗口关闭事件
+   */
+  async handlePopupClose() {
+    // 清空文本区域
+    if (this.elements.quickNote) {
+      this.elements.quickNote.value = '';
+    }
+    
+    // 清除草稿
+    await this.clearDraft();
+    
+    // 清除选中的文本
+    chrome.storage.local.remove('lastSelectedText', () => {
+      console.log('清除最近选中的文本');
+    });
+    
+    // 通知后台脚本清空最近选中的文本
+    try {
+      chrome.runtime.sendMessage({
+        type: 'clearLastSelectedText'
+      });
+    } catch (error) {
+      console.error('通知后台脚本清除选中文本时出错:', error);
     }
   }
 
@@ -338,22 +383,25 @@ class QuickNoteManager {
   /**
    * 显示状态消息
    * @param {string} message - 消息内容
-   * @param {string} type - 消息类型: success | error
+   * @param {string} type - 消息类型: success | error | info
    */
   showStatus(message, type = 'info') {
-    if (!this.elements.quickNoteStatus) return;
+    const statusElement = document.getElementById('globalStatus');
+    if (!statusElement) return;
     
     // 设置状态文本
-    this.elements.quickNoteStatus.textContent = message;
+    statusElement.textContent = message;
     
     // 设置状态类型
-    this.elements.quickNoteStatus.className = 'status';
-    this.elements.quickNoteStatus.classList.add(type);
+    statusElement.className = 'status';
+    statusElement.classList.add(type);
     
-    // 几秒后隐藏
-    setTimeout(() => {
-      this.elements.quickNoteStatus.className = 'status';
-    }, 3000);
+    // 几秒后隐藏（除非是错误消息）
+    if (type !== 'error') {
+      setTimeout(() => {
+        statusElement.classList.remove(type);
+      }, 3000);
+    }
   }
 
   /**
