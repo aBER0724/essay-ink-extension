@@ -20,16 +20,16 @@ async function initialize() {
     const settings = await ReadCraftStorage.getSettings();
     console.log('内容脚本加载设置:', settings);
     
-    // 如果设置中启用了悬浮球，则初始化
-    if (settings.showFloatingBall !== false) {
-      // 确保 FloatingBall 类已加载
-      if (typeof FloatingBall === 'undefined') {
-        console.error('FloatingBall 类未定义');
+    // 如果设置中启用了悬浮按钮，则初始化
+    if (settings.showFloatingBtn !== false) {
+      // 确保 FloatingBtn 类已加载
+      if (typeof FloatingBtn === 'undefined') {
+        console.error('FloatingBtn 类未定义');
         return;
       }
       
-      window.FloatingBall = new FloatingBall();
-      await window.FloatingBall.init();
+      window.FloatingBtn = new FloatingBtn();
+      await window.FloatingBtn.init();
     }
     
     // 监听文本选择
@@ -87,22 +87,22 @@ async function initialize() {
           return true; // 表示异步响应
         }
         
-        if (request.type === 'updateFloatingBall') {
-          console.log('更新悬浮球状态:', request.data);
-          // 更新悬浮球状态
+        if (request.type === 'updateFloatingBtn') {
+          console.log('更新悬浮按钮状态:', request.data);
+          // 更新悬浮按钮状态
           if (request.data.show) {
-            if (window.FloatingBall) {
-              window.FloatingBall.show();
+            if (window.FloatingBtn) {
+              window.FloatingBtn.show();
             } else {
-              // 如果悬浮球不存在，重新初始化
-              window.FloatingBall = new FloatingBall();
-              window.FloatingBall.init();
+              // 如果悬浮按钮不存在，重新初始化
+              window.FloatingBtn = new FloatingBtn();
+              window.FloatingBtn.init();
             }
           } else {
-            if (window.FloatingBall) {
-              window.FloatingBall.hide();
-              // 如果悬浮球被禁用，销毁实例
-              window.FloatingBall = null;
+            if (window.FloatingBtn) {
+              window.FloatingBtn.hide();
+              // 如果悬浮按钮被禁用，销毁实例
+              window.FloatingBtn = null;
             }
           }
           return true;

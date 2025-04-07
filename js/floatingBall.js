@@ -1,9 +1,9 @@
 /**
- * Essay.ink 悬浮球模块
+ * Essay.ink 悬浮按钮模块
  * 提供页面快捷添加功能
  */
 
-class FloatingBall {
+class FloatingBtn {
   constructor() {
     this.ball = null;
     this.dragOffset = { x: 0, y: 0 };
@@ -20,21 +20,21 @@ class FloatingBall {
   }
 
   /**
-   * 初始化悬浮球
+   * 初始化悬浮按钮
    */
   async init() {
     try {
       // 加载设置
       this.settings = await ReadCraftStorage.getSettings();
-      console.log('悬浮球设置:', this.settings);
+      console.log('悬浮按钮设置:', this.settings);
       
-      // 如果设置中禁用了悬浮球，则不创建
-      if (this.settings.showFloatingBall === false) {
-        console.log('悬浮球已禁用');
+      // 如果设置中禁用了悬浮按钮，则不创建
+      if (this.settings.showFloatingBtn === false) {
+        console.log('悬浮按钮已禁用');
         return;
       }
       
-      // 创建悬浮球
+      // 创建悬浮按钮
       this.create();
       
       // 设置选择文本监听器
@@ -46,7 +46,7 @@ class FloatingBall {
       // 监听来自popup的消息
       chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log('收到消息:', request);
-        if (request.type === 'updateFloatingBall') {
+        if (request.type === 'updateFloatingBtn') {
           if (request.data.show) {
             this.show();
           } else {
@@ -58,12 +58,12 @@ class FloatingBall {
       // 初始显示状态
       this.show();
     } catch (error) {
-      console.error('初始化悬浮球失败:', error);
+      console.error('初始化悬浮按钮失败:', error);
     }
   }
 
   /**
-   * 创建悬浮球DOM
+   * 创建悬浮按钮DOM
    */
   create() {
     // 如果已经创建，不重复创建
@@ -71,7 +71,7 @@ class FloatingBall {
       return;
     }
     
-    // 创建悬浮球元素
+    // 创建悬浮按钮元素
     this.ball = document.createElement('div');
     this.ball.className = 'essay-ink-floating-ball';
     this.ball.innerHTML = `添加到 Essay`;
@@ -164,7 +164,7 @@ class FloatingBall {
           type: 'openPopup'
         });
         
-        // 隐藏悬浮球
+        // 隐藏悬浮按钮
         this.hide();
       } catch (error) {
         console.error('打开 popup 失败:', error);
@@ -234,7 +234,7 @@ class FloatingBall {
   }
 
   /**
-   * 显示悬浮球
+   * 显示悬浮按钮
    */
   show() {
     if (this.ball) {
@@ -244,7 +244,7 @@ class FloatingBall {
   }
 
   /**
-   * 隐藏悬浮球
+   * 隐藏悬浮按钮
    */
   hide() {
     if (this.ball) {
@@ -254,8 +254,8 @@ class FloatingBall {
   }
 }
 
-// 创建并初始化悬浮球
-window.FloatingBall = new FloatingBall();
+// 创建并初始化悬浮按钮
+window.FloatingBtn = new FloatingBtn();
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => window.FloatingBall.init(), 1000);
+  setTimeout(() => window.FloatingBtn.init(), 1000);
 }); 

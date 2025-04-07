@@ -15,7 +15,7 @@ class SettingsManager {
       
       // 偏好设置元素
       includeUrl: document.getElementById('includeUrl'),
-      showFloatingBall: document.getElementById('showFloatingBall'),
+      showFloatingBtn: document.getElementById('showFloatingBtn'),
       savePreferencesBtn: document.getElementById('savePreferences'),
       
       // 标签页导航
@@ -63,8 +63,8 @@ class SettingsManager {
       this.elements.includeUrl.checked = this.settings.includeUrl !== false;
     }
     
-    if (this.elements.showFloatingBall) {
-      this.elements.showFloatingBall.checked = this.settings.showFloatingBall !== false;
+    if (this.elements.showFloatingBtn) {
+      this.elements.showFloatingBtn.checked = this.settings.showFloatingBtn !== false;
     }
   }
 
@@ -187,19 +187,19 @@ class SettingsManager {
       
       // 更新设置
       settings.includeUrl = this.elements.includeUrl.checked;
-      settings.showFloatingBall = this.elements.showFloatingBall.checked;
+      settings.showFloatingBtn = this.elements.showFloatingBtn.checked;
       console.log('更新后的设置:', settings);
       
       // 保存设置
       await ReadCraftStorage.saveSettings(settings);
       
-      // 通知内容脚本更新悬浮球状态
+      // 通知内容脚本更新悬浮按钮状态
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
       if (tabs[0]) {
         chrome.tabs.sendMessage(tabs[0].id, {
-          type: 'updateFloatingBall',
+          type: 'updateFloatingBtn',
           data: {
-            show: settings.showFloatingBall
+            show: settings.showFloatingBtn
           }
         });
       }
