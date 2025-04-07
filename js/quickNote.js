@@ -145,7 +145,7 @@ class QuickNoteManager {
       // 如果编辑框为空或只包含默认文本，则替换内容
       if (!currentValue || currentValue === placeholder) {
         // 添加选中的文本和来源信息
-        const content = `${this.currentSelectedText}\n\n---\n> 来源: [${this.currentTitle}](${this.currentUrl})`;
+        const content = `${this.currentSelectedText}\n> 来源: [${this.currentTitle}](${this.currentUrl})`;
         this.elements.quickNote.value = content;
         
         // 保存为草稿
