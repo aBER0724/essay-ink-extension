@@ -399,15 +399,20 @@ class QuickNoteManager {
   async loadFolders() {
     if (!this.elements.noteFolder) return;
     
-    // 显示加载提示
-    this.showStatus('正在加载文件夹...', 'info');
-    
     try {
       // 记住当前选择的文件夹
       const currentFolder = this.elements.noteFolder.value;
       
-      // 从API获取文件夹
-      this.folders = await window.ReadCraftAPI.fetchFolders();
+      // 尝试从缓存获取文件夹
+      const cachedFolders = await this.getCachedFolders();
+      if (cachedFolders) {
+        this.folders = cachedFolders;
+      } else {
+        // 从API获取文件夹
+        this.folders = await window.ReadCraftAPI.fetchFolders();
+        // 缓存文件夹列表
+        await this.cacheFolders(this.folders);
+      }
       
       // 清空下拉菜单
       this.elements.noteFolder.innerHTML = '';
@@ -432,13 +437,17 @@ class QuickNoteManager {
           this.elements.noteFolder.value = currentFolder;
         } else if (this.settings.lastFolder && this.folderExists(this.settings.lastFolder)) {
           this.elements.noteFolder.value = this.settings.lastFolder;
+        } else {
+          // 默认选择未分类
+          this.elements.noteFolder.value = '';
         }
       }
       
-      this.showStatus('文件夹加载完成', 'success');
+      // 在后台异步刷新文件夹列表
+      this.refreshFoldersInBackground();
     } catch (error) {
       console.error('加载文件夹失败:', error);
-      this.showStatus(`加载文件夹失败: ${error.message}`, 'error');
+      // 静默失败，不显示错误提示
     }
   }
   
@@ -456,6 +465,59 @@ class QuickNoteManager {
     
     // 检查API返回的文件夹
     return this.folders.some(folder => folder.id === folderId);
+  }
+
+  /**
+   * 从缓存获取文件夹列表
+   * @returns {Promise<Array|null>} - 缓存的文件夹列表，如果不存在或已过期则返回null
+   */
+  async getCachedFolders() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(['folders', 'foldersTimestamp'], (result) => {
+        if (!result.folders || !result.foldersTimestamp) {
+          resolve(null);
+          return;
+        }
+        
+        // 检查缓存是否过期（1小时）
+        const now = Date.now();
+        const cacheAge = now - result.foldersTimestamp;
+        if (cacheAge > 3600000) { // 1小时 = 3600000毫秒
+          resolve(null);
+          return;
+        }
+        
+        resolve(result.folders);
+      });
+    });
+  }
+
+  /**
+   * 缓存文件夹列表
+   * @param {Array} folders - 文件夹列表
+   */
+  async cacheFolders(folders) {
+    return new Promise((resolve) => {
+      chrome.storage.local.set({
+        folders: folders,
+        foldersTimestamp: Date.now()
+      }, () => resolve());
+    });
+  }
+
+  /**
+   * 在后台异步刷新文件夹列表
+   */
+  async refreshFoldersInBackground() {
+    try {
+      const newFolders = await window.ReadCraftAPI.fetchFolders();
+      if (newFolders && newFolders.length > 0) {
+        this.folders = newFolders;
+        await this.cacheFolders(newFolders);
+      }
+    } catch (error) {
+      console.error('后台刷新文件夹失败:', error);
+    }
   }
 }
 
