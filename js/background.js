@@ -17,7 +17,16 @@ function initialize() {
     // 设置消息监听器
     chrome.runtime.onMessage.addListener(handleMessage);
   } catch (error) {
-    console.error('初始化扩展时出错:', error);
+    console.error('初始化扩展时出错:', error.message);
+    
+    // 发送通知
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'images/icon128.png',
+      title: 'Essay.ink 划词助手',
+      message: '初始化扩展时出错: ' + error.message,
+      priority: 0
+    });
   }
 }
 
@@ -27,7 +36,16 @@ function createContextMenus() {
     // 清除现有菜单
     chrome.contextMenus.removeAll(() => {
       if (chrome.runtime.lastError) {
-        console.error('清除菜单时出错:', chrome.runtime.lastError);
+        console.error('清除菜单时出错:', chrome.runtime.lastError.message);
+        
+        // 发送通知
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'images/icon128.png',
+          title: 'Essay.ink 划词助手',
+          message: '清除菜单时出错: ' + chrome.runtime.lastError.message,
+          priority: 0
+        });
       }
       
       try {
@@ -38,18 +56,45 @@ function createContextMenus() {
           contexts: ['selection']
         }, () => {
           if (chrome.runtime.lastError) {
-            console.error('创建菜单时出错:', chrome.runtime.lastError);
+            console.error('创建菜单时出错:', chrome.runtime.lastError.message);
+            
+            // 发送通知
+            chrome.notifications.create({
+              type: 'basic',
+              iconUrl: 'images/icon128.png',
+              title: 'Essay.ink 划词助手',
+              message: '创建菜单时出错: ' + chrome.runtime.lastError.message,
+              priority: 0
+            });
           }
         });
         
         // 为菜单项添加点击事件
         chrome.contextMenus.onClicked.addListener(handleContextMenuClick);
       } catch (innerError) {
-        console.error('创建菜单过程中出错:', innerError);
+        console.error('创建菜单过程中出错:', innerError.message);
+        
+        // 发送通知
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'images/icon128.png',
+          title: 'Essay.ink 划词助手',
+          message: '创建菜单过程中出错: ' + innerError.message,
+          priority: 0
+        });
       }
     });
   } catch (error) {
-    console.error('处理右键菜单时出错:', error);
+    console.error('处理右键菜单时出错:', error.message);
+    
+    // 发送通知
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'images/icon128.png',
+      title: 'Essay.ink 划词助手',
+      message: '处理右键菜单时出错: ' + error.message,
+      priority: 0
+    });
   }
 }
 
@@ -63,7 +108,16 @@ function handleContextMenuClick(info, tab) {
       chrome.action.openPopup();
     }
   } catch (error) {
-    console.error('处理右键菜单点击时出错:', error);
+    console.error('处理右键菜单点击时出错:', error.message);
+    
+    // 发送通知
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'images/icon128.png',
+      title: 'Essay.ink 划词助手',
+      message: '处理右键菜单点击时出错: ' + error.message,
+      priority: 0
+    });
   }
 }
 
@@ -71,6 +125,21 @@ function handleContextMenuClick(info, tab) {
 function handleMessage(message, sender, sendResponse) {
   try {
     console.log('后台脚本收到消息:', message);
+    
+    // 显示通知
+    if (message.type === 'showNotification' && message.data) {
+      // 使用Chrome通知API显示通知
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'images/icon128.png',
+        title: 'Essay.ink 划词助手',
+        message: message.data.message,
+        priority: 0
+      });
+      
+      sendResponse({ success: true });
+      return true;
+    }
     
     // 保存选中的文本
     if (message.type === 'saveSelectedText' && message.data) {
@@ -80,7 +149,16 @@ function handleMessage(message, sender, sendResponse) {
       // 持久化存储选中的文本
       chrome.storage.local.set({ lastSelectedText: lastSelectedText }, () => {
         if (chrome.runtime.lastError) {
-          console.error('保存选中文本到存储时出错:', chrome.runtime.lastError);
+          console.error('保存选中文本到存储时出错:', chrome.runtime.lastError.message);
+          
+          // 发送通知
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'images/icon128.png',
+            title: 'Essay.ink 划词助手',
+            message: '保存选中文本到存储时出错: ' + chrome.runtime.lastError.message,
+            priority: 0
+          });
         }
       });
       
@@ -111,7 +189,16 @@ function handleMessage(message, sender, sendResponse) {
       // 从存储中移除
       chrome.storage.local.remove('lastSelectedText', () => {
         if (chrome.runtime.lastError) {
-          console.error('从存储中移除选中文本时出错:', chrome.runtime.lastError);
+          console.error('从存储中移除选中文本时出错:', chrome.runtime.lastError.message);
+          
+          // 发送通知
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: 'images/icon128.png',
+            title: 'Essay.ink 划词助手',
+            message: '从存储中移除选中文本时出错: ' + chrome.runtime.lastError.message,
+            priority: 0
+          });
         }
       });
       
@@ -129,12 +216,22 @@ function handleMessage(message, sender, sendResponse) {
     // 返回 true 表示异步处理
     return true;
   } catch (error) {
-    console.error('处理消息时出错:', error);
+    console.error('处理消息时出错:', error.message);
     try {
       sendResponse({ success: false, error: error.message });
     } catch (e) {
       // 忽略发送响应时的错误
     }
+    
+    // 发送通知
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: 'images/icon128.png',
+      title: 'Essay.ink 划词助手',
+      message: '处理消息时出错: ' + error.message,
+      priority: 0
+    });
+    
     return true;
   }
 }

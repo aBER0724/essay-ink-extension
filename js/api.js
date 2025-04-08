@@ -1,9 +1,9 @@
 /**
- * ReadCraft API 模块
+ * EssaySelect API 模块
  * 处理与 Essay.ink 服务的所有通信
  */
 
-class ReadCraftAPI {
+class EssaySelectAPI {
   constructor() {
     this.settings = null;
     this.folderCache = null;
@@ -12,7 +12,7 @@ class ReadCraftAPI {
   }
 
   async init() {
-    this.settings = await ReadCraftStorage.getSettings();
+    this.settings = await EssaySelectStorage.getSettings();
   }
 
   /**
@@ -104,7 +104,7 @@ class ReadCraftAPI {
     let finalContent = content;
     
     // 获取设置
-    const settings = await ReadCraftStorage.getSettings();
+    const settings = await EssaySelectStorage.getSettings();
     
     // 如果需要包含URL，添加来源链接
     if (includeUrl && settings.includeUrl !== false) {
@@ -117,7 +117,7 @@ class ReadCraftAPI {
       if (tabs && tabs.length > 0) {
         const url = tabs[0].url;
         const title = tabs[0].title;
-        finalContent += `\n\n---\n> 来源: [${title}](${url})`;
+        finalContent += `\n> 来源: [${title}](${url})`;
       }
     }
     
@@ -240,4 +240,4 @@ class ReadCraftAPI {
 }
 
 // 导出API实例
-window.ReadCraftAPI = new ReadCraftAPI(); 
+window.EssaySelectAPI = new EssaySelectAPI(); 

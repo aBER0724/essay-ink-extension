@@ -30,7 +30,7 @@ class QuickNoteManager {
   async init() {
     try {
       // 加载设置
-      this.settings = await ReadCraftStorage.getSettings();
+      this.settings = await EssaySelectStorage.getSettings();
       
       // 初始化UI
       await this.initUI();
@@ -260,7 +260,7 @@ class QuickNoteManager {
     
     // 确保设置已加载
     if (!this.settings) {
-      this.settings = await ReadCraftStorage.getSettings();
+      this.settings = await EssaySelectStorage.getSettings();
     }
     
     // 直接从UI获取内容类型
@@ -277,7 +277,7 @@ class QuickNoteManager {
     
     try {
       // 发送到 Essay.ink
-      const result = await window.ReadCraftAPI.saveQuickNote(
+      const result = await window.EssaySelectAPI.saveQuickNote(
         content, 
         folderId, 
         false, 
@@ -326,15 +326,15 @@ class QuickNoteManager {
     const folderId = this.elements.noteFolder ? this.elements.noteFolder.value : null;
     
     try {
-      await ReadCraftStorage.saveNoteDraft(content);
+      await EssaySelectStorage.saveNoteDraft(content);
       
       // 保存当前选择的文件夹
       if (folderId) {
         if (!this.settings) {
-          this.settings = await ReadCraftStorage.getSettings();
+          this.settings = await EssaySelectStorage.getSettings();
         }
         this.settings.lastFolder = folderId;
-        await ReadCraftStorage.saveSettings(this.settings);
+        await EssaySelectStorage.saveSettings(this.settings);
       }
     } catch (error) {
       console.error('保存草稿失败:', error);
@@ -348,7 +348,7 @@ class QuickNoteManager {
     if (!this.elements.quickNote) return;
     
     try {
-      const draft = await ReadCraftStorage.getNoteDraft();
+      const draft = await EssaySelectStorage.getNoteDraft();
       
       if (draft && draft.content) {
         this.elements.quickNote.value = draft.content;
@@ -363,7 +363,7 @@ class QuickNoteManager {
    */
   async clearDraft() {
     try {
-      await ReadCraftStorage.clearNoteDraft();
+      await EssaySelectStorage.clearNoteDraft();
     } catch (error) {
       console.error('清除草稿失败:', error);
     }
@@ -434,11 +434,11 @@ class QuickNoteManager {
    */
   async updateContentTypeSetting(contentType) {
     if (!this.settings) {
-      this.settings = await ReadCraftStorage.getSettings();
+      this.settings = await EssaySelectStorage.getSettings();
     }
     
     this.settings.contentType = contentType;
-    await ReadCraftStorage.saveSettings(this.settings);
+    await EssaySelectStorage.saveSettings(this.settings);
   }
 
   /**
@@ -457,7 +457,7 @@ class QuickNoteManager {
         this.folders = cachedFolders;
       } else {
         // 从API获取文件夹
-        this.folders = await window.ReadCraftAPI.fetchFolders();
+        this.folders = await window.EssaySelectAPI.fetchFolders();
         // 缓存文件夹列表
         await this.cacheFolders(this.folders);
       }
@@ -558,7 +558,7 @@ class QuickNoteManager {
    */
   async refreshFoldersInBackground() {
     try {
-      const newFolders = await window.ReadCraftAPI.fetchFolders();
+      const newFolders = await window.EssaySelectAPI.fetchFolders();
       if (newFolders && newFolders.length > 0) {
         this.folders = newFolders;
         await this.cacheFolders(newFolders);

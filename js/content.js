@@ -6,6 +6,33 @@
 // 保存当前选中的文本
 let currentSelectedText = '';
 
+/**
+ * 显示状态通知
+ * @param {string} message - 消息内容
+ * @param {string} type - 消息类型: success | error | info
+ */
+function showNotification(message, type = 'info') {
+  try {
+    // 如果已初始化悬浮按钮，使用它显示通知
+    if (window.FloatingBtn) {
+      window.FloatingBtn.showNotification(message, type);
+      return;
+    }
+    
+    // 如果悬浮按钮不可用，尝试发送消息到后台脚本
+    chrome.runtime.sendMessage({
+      type: 'showNotification',
+      data: {
+        message,
+        type
+      }
+    });
+  } catch (error) {
+    // 最后的后备选项：使用console
+    console.log(message);
+  }
+}
+
 // 初始化
 async function initialize() {
   try {
@@ -17,7 +44,7 @@ async function initialize() {
     }
     
     // 加载设置
-    const settings = await ReadCraftStorage.getSettings();
+    const settings = await EssaySelectStorage.getSettings();
     console.log('内容脚本加载设置:', settings);
     
     // 如果设置中启用了悬浮按钮，则初始化
@@ -42,9 +69,7 @@ async function initialize() {
           try {
             // 检查扩展是否可用
             if (!chrome.runtime?.id) {
-              console.log('扩展上下文已失效，尝试重新初始化');
-              // 尝试重新初始化扩展
-              chrome.runtime.reload();
+              showNotification('扩展上下文已失效，请刷新页面重试', 'error');
               return;
             }
             
@@ -54,14 +79,12 @@ async function initialize() {
             }, response => {
               // 检查是否有错误
               if (chrome.runtime.lastError) {
-                console.log('发送文本消息时出错:', chrome.runtime.lastError);
+                showNotification('发送文本消息时出错: ' + chrome.runtime.lastError.message, 'error');
                 return;
               }
             });
           } catch (error) {
-            console.log('捕获到错误:', error);
-            // 扩展上下文已失效，尝试重新初始化
-            chrome.runtime.reload();
+            showNotification('捕获到错误: ' + error.message + '，请刷新页面', 'error');
           }
         }
       }, 10);
@@ -72,7 +95,7 @@ async function initialize() {
       try {
         // 检查扩展是否可用
         if (!chrome.runtime?.id) {
-          console.log('扩展上下文已失效');
+          showNotification('扩展上下文已失效', 'error');
           return;
         }
         
@@ -118,7 +141,7 @@ async function initialize() {
       }
     });
   } catch (error) {
-    console.error('初始化内容脚本失败:', error);
+    showNotification('初始化内容脚本失败: ' + error.message, 'error');
   }
 }
 

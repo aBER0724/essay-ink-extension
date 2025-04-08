@@ -1,5 +1,5 @@
 /**
- * ReadCraft 弹出窗口脚本
+ * EssaySelect 弹出窗口脚本
  * 处理弹出窗口的UI交互
  */
 
@@ -40,7 +40,7 @@ class PopupController {
     this.state.activeTab = tabs[0];
     
     // 加载设置
-    this.settings = await ReadCraftStorage.getSettings();
+    this.settings = await EssaySelectStorage.getSettings();
     
     // 设置默认标签
     if (this.elements.summaryTag) {
@@ -52,11 +52,11 @@ class PopupController {
     }
     
     // 检查是否有临时存储的内容
-    const tempContent = await ReadCraftStorage.getTempContent();
+    const tempContent = await EssaySelectStorage.getTempContent();
     if (tempContent) {
       this.showExtractedContent(tempContent);
       // 清空临时存储
-      await ReadCraftStorage.setTempContent('');
+      await EssaySelectStorage.setTempContent('');
     }
     
     // 绑定事件
@@ -120,6 +120,13 @@ class PopupController {
    */
   async sendQuickNote() {
     try {
+      // 检查quickNote元素是否存在
+      if (!this.elements.quickNote) {
+        console.log('快速笔记元素不存在，可能在不同的选项卡中');
+        this.showStatus('无法访问笔记内容，请切换到"添加笔记"选项卡', 'error');
+        return;
+      }
+      
       const content = this.elements.quickNote.value.trim();
       
       if (!content) {
@@ -127,14 +134,31 @@ class PopupController {
         return;
       }
       
+      // 检查API对象是否存在
+      if (!window.EssaySelectAPI) {
+        console.error('EssaySelectAPI对象未定义');
+        this.showStatus('API服务不可用，请刷新页面重试', 'error');
+        return;
+      }
+      
+      // 检查API方法是否存在
+      if (typeof window.EssaySelectAPI.saveQuickNote !== 'function') {
+        console.error('EssaySelectAPI.saveQuickNote方法未定义');
+        this.showStatus('API服务不完整，请刷新页面重试', 'error');
+        return;
+      }
+      
       this.setLoading(true);
       this.showStatus('正在发送...', 'info');
       
-      // 获取标签
-      const tag = this.elements.quickNoteTag.value.trim();
+      // 获取标签，并确保元素存在
+      let tag = '';
+      if (this.elements.quickNoteTag) {
+        tag = this.elements.quickNoteTag.value.trim();
+      }
       
       // 发送到服务器
-      await ReadCraftAPI.saveQuickNote(
+      await window.EssaySelectAPI.saveQuickNote(
         content,
         tag,
         this.settings.includeUrl

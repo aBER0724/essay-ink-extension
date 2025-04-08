@@ -44,7 +44,7 @@ class SettingsManager {
    * 加载用户设置
    */
   async loadSettings() {
-    this.settings = await ReadCraftStorage.getSettings();
+    this.settings = await EssaySelectStorage.getSettings();
     console.log('加载设置:', this.settings);
   }
 
@@ -163,7 +163,7 @@ class SettingsManager {
       this.settings.apiKey = apiKey;
       
       // 保存设置
-      await ReadCraftStorage.saveSettings(this.settings);
+      await EssaySelectStorage.saveSettings(this.settings);
       
       // 显示成功消息
       this.showStatus('API Token 已保存', 'success');
@@ -182,7 +182,7 @@ class SettingsManager {
       this.showStatus('正在保存设置...', 'info');
       
       // 获取当前设置
-      const settings = await ReadCraftStorage.getSettings();
+      const settings = await EssaySelectStorage.getSettings();
       console.log('当前设置:', settings);
       
       // 更新设置
@@ -191,7 +191,7 @@ class SettingsManager {
       console.log('更新后的设置:', settings);
       
       // 保存设置
-      await ReadCraftStorage.saveSettings(settings);
+      await EssaySelectStorage.saveSettings(settings);
       
       // 通知内容脚本更新悬浮按钮状态
       const tabs = await chrome.tabs.query({ active: true, currentWindow: true });

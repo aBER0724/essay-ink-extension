@@ -25,7 +25,7 @@ class FloatingBtn {
   async init() {
     try {
       // 加载设置
-      this.settings = await ReadCraftStorage.getSettings();
+      this.settings = await EssaySelectStorage.getSettings();
       console.log('悬浮按钮设置:', this.settings);
       
       // 如果设置中禁用了悬浮按钮，则不创建
@@ -81,20 +81,21 @@ class FloatingBtn {
     style.textContent = `
       .essay-ink-floating-ball {
         position: fixed;
-        padding: 5px 10px;
-        background-color: #4caf50;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         color: white;
-        border-radius: 3px;
-        font-size: 12px;
+        border-radius: 5px;
+        font-size: 13px;
         cursor: pointer;
         z-index: 9999;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
         display: none;
-        font-family: Arial, sans-serif;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        transition: all 0.3s ease;
       }
       
       .essay-ink-floating-ball:hover {
-        background-color: #3e9142;
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
       }
     `;
     
@@ -156,8 +157,20 @@ class FloatingBtn {
       if (this.isLoading || !this.currentSelectedText) return;
       
       try {
-        // 保存选中的文本到临时存储
-        await ReadCraftStorage.setTempContent(this.currentSelectedText);
+        // 获取当前页面信息
+        const currentUrl = window.location.href;
+        const currentTitle = document.title;
+        
+        // 准备保存的内容
+        let contentToSave = this.currentSelectedText;
+        
+        // 根据设置决定是否添加来源信息
+        if (this.settings.includeUrl !== false) {
+          contentToSave += `\n> 来源: [${currentTitle}](${currentUrl})`;
+        }
+        
+        // 保存内容到临时存储
+        await EssaySelectStorage.setTempContent(contentToSave);
         
         // 打开 popup
         chrome.runtime.sendMessage({
@@ -180,7 +193,7 @@ class FloatingBtn {
    */
   async sendToEssayInk(text, url, title) {
     // 获取 API 设置
-    const settings = await ReadCraftStorage.getSettings();
+    const settings = await EssaySelectStorage.getSettings();
     
     if (!settings.apiKey) {
       throw new Error('Essay.ink API Token 未设置，请在扩展设置中配置');
@@ -251,6 +264,71 @@ class FloatingBtn {
       this.ball.style.display = 'none';
       this.isVisible = false;
     }
+  }
+
+  /**
+   * 显示状态通知
+   * @param {string} message - 消息内容
+   * @param {string} type - 消息类型: success | error | info
+   */
+  showNotification(message, type = 'info') {
+    // 如果通知元素不存在，创建它
+    let notification = document.getElementById('essay-ink-notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'essay-ink-notification';
+      document.body.appendChild(notification);
+      
+      // 添加样式
+      const style = document.createElement('style');
+      style.textContent = `
+        #essay-ink-notification {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          padding: 10px 15px;
+          border-radius: 4px;
+          font-size: 14px;
+          font-family: Arial, sans-serif;
+          z-index: 10000;
+          max-width: 300px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+          transition: opacity 0.3s, transform 0.3s;
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        #essay-ink-notification.show {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        #essay-ink-notification.success {
+          background-color: #e8f5e9;
+          color: #2e7d32;
+          border-left: 4px solid #2e7d32;
+        }
+        #essay-ink-notification.error {
+          background-color: #ffebee;
+          color: #c62828;
+          border-left: 4px solid #c62828;
+        }
+        #essay-ink-notification.info {
+          background-color: #e3f2fd;
+          color: #1565c0;
+          border-left: 4px solid #1565c0;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // 设置消息内容和类型
+    notification.textContent = message;
+    notification.className = type;
+    notification.classList.add('show');
+    
+    // 几秒后自动隐藏通知
+    setTimeout(() => {
+      notification.classList.remove('show');
+    }, 3000);
   }
 }
 

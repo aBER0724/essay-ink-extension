@@ -1,51 +1,66 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Essay.ink 助手</title>
   <style>
     :root {
-      --primary-color: #4caf50;
-      --secondary-color: #81c784;
-      --background-color: #f9fcf9;
-      --text-color: #333;
-      --border-color: #ddd;
-      --success-color: #4caf50;
-      --error-color: #f44336;
-      --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --primary-color: #10b981;
+      --secondary-color: #34d399;
+      --background-color: #ecfdf5;
+      --text-color: #064e3b;
+      --border-color: #d1fae5;
+      --success-color: #059669;
+      --error-color: #dc2626;
+      --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
-    
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       width: 600px;
       height: 600px;
       margin: 0;
       padding: 0;
-      background-color: var(--background-color);
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
       color: var(--text-color);
     }
-    
+
     .container {
       padding: 16px;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 16px;
+      height: 100%;
+      box-sizing: border-box;
     }
-    
+
     .title {
       text-align: center;
       margin-bottom: 20px;
       font-size: 20px;
-      font-weight: 600;
-      color: var(--primary-color);
+      background: linear-gradient(to right, #059669, #10b981);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
     }
-    
+
     .card {
-      background-color: white;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 8px 32px rgba(16, 185, 129, 0.1);
       border-radius: 10px;
       padding: 16px;
       margin-bottom: 16px;
-      box-shadow: var(--card-shadow);
     }
-    
+
+    .card:hover {
+      background: rgba(255, 255, 255, 0.8);
+    }
+
     .card-title {
       font-weight: 600;
       margin-bottom: 10px;
@@ -53,13 +68,13 @@
       display: flex;
       align-items: center;
     }
-    
+
     .card-title svg {
       margin-right: 8px;
     }
-    
+
     .button {
-      background-color: var(--primary-color);
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
       color: white;
       border: none;
       border-radius: 5px;
@@ -68,52 +83,71 @@
       font-weight: 500;
       width: 100%;
       margin-top: 10px;
-      transition: background-color 0.2s;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
     }
-    
+
     .button:hover {
-      background-color: #3e9142;
+      background: linear-gradient(135deg, #059669 0%, #047857 100%);
     }
-    
+
     .button:disabled {
-      background-color: var(--border-color);
-      cursor: not-allowed;
+      background: #e5e7eb;
+      box-shadow: none;
     }
-    
+
     .input-group {
       margin-bottom: 12px;
     }
-    
+
     label {
       display: block;
       margin-bottom: 5px;
       font-weight: 500;
       font-size: 14px;
     }
-    
-    input, textarea, select {
+
+    input,
+    textarea,
+    select {
       width: 100%;
       padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.9);
       border: 1px solid var(--border-color);
       border-radius: 5px;
       box-sizing: border-box;
       font-size: 14px;
+      transition: all 0.3s ease;
     }
-    
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      outline: none;
+    }
+
+    /* Styling for checkbox and radio buttons */
+    input[type="checkbox"], 
+    input[type="radio"] {
+      accent-color: var(--primary-color);
+    }
+
     textarea {
       resize: vertical;
-      
       min-height: 200px;
     }
-    
+
     .status {
       padding: 8px;
       border-radius: 4px;
       margin-top: 10px;
       font-size: 14px;
       display: none;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    
+
     #globalStatus {
       margin-bottom: 15px;
       text-align: center;
@@ -130,42 +164,44 @@
       width: 80%;
       padding: 10px;
       border-radius: 4px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     }
-    
-    .error {
-      background-color: #ffebee;
-      color: var(--error-color);
-      display: block;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-    
+
     .success {
-      background-color: #e8f5e9;
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.2);
       color: var(--success-color);
       display: block;
       visibility: visible !important;
       opacity: 1 !important;
     }
-    
-    .info {
-      background-color: #e3f2fd;
-      color: #1976d2;
+
+    .error {
+      background: rgba(220, 38, 38, 0.1);
+      border-color: rgba(220, 38, 38, 0.2);
+      color: var(--error-color);
       display: block;
       visibility: visible !important;
       opacity: 1 !important;
     }
-    
+
+    .info {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.2);
+      display: block;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+
     .loading {
       display: flex;
       justify-content: center;
       align-items: center;
       margin: 20px 0;
     }
-    
+
     .spinner {
-      border: 3px solid #f3f3f3;
+      border: 3px solid rgba(16, 185, 129, 0.1);
       border-top: 3px solid var(--primary-color);
       border-radius: 50%;
       width: 20px;
@@ -173,104 +209,115 @@
       animation: spin 1s linear infinite;
       margin-right: 10px;
     }
-    
+
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
-    
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: #666;
-      margin-top: 10px;
-    }
-    
+
     .tabs {
       display: flex;
       margin-bottom: 15px;
       border-bottom: 1px solid var(--border-color);
     }
-    
+
     .tab {
       padding: 8px 15px;
       cursor: pointer;
       border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
     }
-    
+
     .tab.active {
-      color: var(--primary-color);
-      border-bottom: 2px solid var(--primary-color);
-      font-weight: 500;
+      background: linear-gradient(to right, #059669, #10b981);
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      border-bottom-color: #10b981;
     }
-    
+
     .tab-content {
       display: none;
     }
-    
+
     .tab-content.active {
       display: block;
     }
-    
+
     .checkbox-group {
       display: flex;
       align-items: center;
       margin-bottom: 16px;
     }
-    
+
     .checkbox-group input[type="checkbox"] {
       width: auto;
       margin-right: 8px;
     }
-    
+
     .checkbox-group label {
       display: inline;
       margin-bottom: 0;
       font-weight: normal;
       cursor: pointer;
     }
-    
+
     .radio-group {
       display: flex;
       margin-bottom: 10px;
     }
-    
+
     .radio-option {
       display: flex;
       align-items: center;
       margin-right: 20px;
     }
-    
+
     .radio-option input[type="radio"] {
       width: auto;
       margin-right: 5px;
     }
-    
+
     .radio-option label {
       display: inline;
       margin-bottom: 0;
       font-weight: normal;
       cursor: pointer;
     }
+
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      right: 0;
+    }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="title">Essay.ink 划词助手</div>
-    
-    <!-- 全局状态通知区域 -->
+
     <div id="globalStatus" class="status"></div>
-    
+
     <div class="tabs">
       <div class="tab active" data-tab="quick">添加笔记</div>
       <div class="tab" data-tab="settings">设置</div>
     </div>
-    
-    <!-- 快速笔记选项卡 -->
+
     <div class="tab-content active" id="quickTab">
       <div class="card">
         <div class="card-title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
@@ -302,14 +349,16 @@
         <div id="quickNoteStatus" class="status"></div>
       </div>
     </div>
-    
-    <!-- 设置选项卡 -->
+
     <div class="tab-content" id="settingsTab">
       <div class="card">
         <div class="card-title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
           </svg>
           Essay.ink 设置
         </div>
@@ -320,10 +369,11 @@
         <button id="saveSettings" class="button">保存设置</button>
         <div id="settingsStatus" class="status"></div>
       </div>
-      
+
       <div class="card">
         <div class="card-title">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"></path>
             <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
           </svg>
@@ -340,16 +390,17 @@
         <button id="savePreferences" class="button">保存偏好</button>
       </div>
     </div>
-    
+
     <div class="footer">
       Essay.ink 划词添加 v1.0
     </div>
   </div>
-  
+
   <script src="js/storage.js"></script>
   <script src="js/api.js"></script>
-  <script src="js/popup.js"></script>
   <script src="js/settings.js"></script>
   <script src="js/quickNote.js"></script>
+  <script src="js/popup.js"></script>
 </body>
-</html> 
+
+</html>

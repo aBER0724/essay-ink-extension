@@ -93,7 +93,7 @@ async function setTempContent(content) {
 }
 
 // 导出函数
-window.ReadCraftStorage = {
+window.EssaySelectStorage = {
   getSettings,
   saveSettings,
   setTempContent,
